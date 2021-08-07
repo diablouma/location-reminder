@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation platform('com.google.firebase:firebase-bom:28.3.0')
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     // App dependencies
     implementation "androidx.appcompat:appcompat:$appCompatVersion"
