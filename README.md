@@ -2,6 +2,12 @@
 
 A Todo list app with location reminders that remind the user to do something when he reaches a specific location. The app will require the user to create an account and login to set and access reminders.
 
+## Google Maps Api Key
+Please create a local.properties file, then add the api key like:
+```
+MAPS_API_KEY=yourApiKeyHere
+```
+
 ## Getting Started
 
 1. Clone the project to your local machine.
