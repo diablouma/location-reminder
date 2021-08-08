@@ -4,17 +4,20 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.LatLng
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
@@ -29,6 +32,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private val REQUEST_LOCATION_PERMISSION = 1
+    private var locationPermissionGranted = false
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var lastKnownLocation: Location? = null
+    private val defaultLocation = LatLng(-33.8523341, 151.2106085)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -56,6 +63,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
 //        TODO: call this function after the user confirms on the selected location
         onLocationSelected()
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         return binding.root
     }
@@ -95,6 +104,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map = googleMap
 
         enableMyLocation()
+        getDeviceLocation()
     }
 
     @SuppressLint("MissingPermission") // we are checking this with the isPermissionGranted and onREquestPermissionResult methods
@@ -102,12 +112,45 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (isPermissionGranted()) {
             Log.i("SelectLocationFragment", "Premission Granted for getting users location")
             map.setMyLocationEnabled(true)
+            locationPermissionGranted = true
         } else {
             ActivityCompat.requestPermissions(
                 this.requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 REQUEST_LOCATION_PERMISSION
             )
+        }
+    }
+
+    private fun getDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (locationPermissionGranted) {
+                val locationResult = fusedLocationProviderClient.lastLocation
+                locationResult.addOnCompleteListener(requireActivity()) { task ->
+                    if (task.isSuccessful) {
+                        // Set the map's camera position to the current location of the device.
+                        lastKnownLocation = task.result
+                        if (lastKnownLocation != null) {
+                            map?.moveCamera(
+                                CameraUpdateFactory.newLatLngZoom(
+                                LatLng(lastKnownLocation!!.latitude,
+                                    lastKnownLocation!!.longitude), DEFAULT_ZOOM.toFloat()))
+                        }
+                    } else {
+                        Log.d(TAG, "Current location is null. Using defaults.")
+                        Log.e(TAG, "Exception: %s", task.exception)
+                        map?.moveCamera(CameraUpdateFactory
+                            .newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat()))
+                        map?.uiSettings?.isMyLocationButtonEnabled = false
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message, e)
         }
     }
 
@@ -133,4 +176,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    companion object {
+        private const val DEFAULT_ZOOM = 15
+        private val TAG = SelectLocationFragment::class.java.simpleName
+    }
 }
