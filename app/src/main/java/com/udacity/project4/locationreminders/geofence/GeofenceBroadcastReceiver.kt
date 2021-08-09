@@ -27,28 +27,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // TODO: Step 11 implement the onReceive method
         if (intent.action == ACTION_GEOFENCE_EVENT) {
-            val geofencingEvent = GeofencingEvent.fromIntent(intent)
-
-            if (geofencingEvent.hasError()) {
-                val errorMessage = errorMessage(context, geofencingEvent.errorCode)
-                Log.e(this.javaClass.name, errorMessage)
-                return
-            }
-
-            if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                Log.v(this.javaClass.name, context.getString(R.string.geofence_entered))
-                val fenceId = when {
-                    geofencingEvent.triggeringGeofences.isNotEmpty() ->
-                        geofencingEvent.triggeringGeofences[0].requestId
-                    else -> {
-                        Log.e(this.javaClass.name, "No Geofence Trigger Found!")
-                        return
-                    }
-                }
-
-                Log.i(this.javaClass.name, "Entered into geofence:" + fenceId)
-            }
+            GeofenceTransitionsJobIntentService.enqueueWork(context, intent)
         }
-
     }
 }
