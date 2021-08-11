@@ -46,7 +46,8 @@
                 <TextView
                     android:id="@+id/details_title_value"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:text="@{reminderDataItem.title}"/>
 
             </TableRow>
 
@@ -63,7 +64,8 @@
                 <TextView
                     android:id="@+id/details_description_value"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:text="@{reminderDataItem.description}"/>
             </TableRow>
 
             <TableRow
@@ -79,7 +81,8 @@
                 <TextView
                     android:id="@+id/details_location_value"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:text="@{reminderDataItem.location}"/>
             </TableRow>
 
         </TableLayout>
