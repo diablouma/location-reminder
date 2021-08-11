@@ -45,4 +45,7 @@
     <string name="error_adding_geofence">Error Happened, Can\'t Add Geofence</string>
     <string name="login_button_label">Login</string>
     <string name="button_save_location">SAVE</string>
+    <string name="details_location">Location</string>
+    <string name="details_title_label">Title</string>
+    <string name="details_description_label">Description</string>
 </resources>
