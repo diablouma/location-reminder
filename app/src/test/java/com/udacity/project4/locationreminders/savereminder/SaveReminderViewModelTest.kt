@@ -7,11 +7,16 @@ import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
+import getOrAwaitValue
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.nullValue
 import org.junit.Before
 import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.stopKoin
 
@@ -50,4 +55,14 @@ class SaveReminderViewModelTest {
             SaveReminderViewModel(ApplicationProvider.getApplicationContext(), remindersRepository)
     }
 
+    @Test
+    fun shouldClearlAllValues() {
+        saveReminderViewModel.onClear()
+        assertThat(saveReminderViewModel.reminderTitle.getOrAwaitValue(), `is`(nullValue()))
+        assertThat(saveReminderViewModel.reminderDescription.getOrAwaitValue(), `is`(nullValue()))
+        assertThat(saveReminderViewModel.reminderSelectedLocationStr.getOrAwaitValue(), `is`(nullValue()))
+        assertThat(saveReminderViewModel.selectedPOI.getOrAwaitValue(), `is`(nullValue()))
+        assertThat(saveReminderViewModel.latitude.getOrAwaitValue(), `is`(nullValue()))
+        assertThat(saveReminderViewModel.longitude.getOrAwaitValue(), `is`(nullValue()))
+    }
 }
