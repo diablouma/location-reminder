@@ -5,12 +5,20 @@ import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.runBlocking
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
-class FakeDataSource (var reminders: MutableList<ReminderDTO>? = mutableListOf()) : ReminderDataSource {
+class FakeDataSource(var reminders: MutableList<ReminderDTO>? = mutableListOf()) :
+    ReminderDataSource {
 
-//    TODO: Create a fake data source to act as a double to the real data source
+    private var shouldReturnError = false
+
+    fun setReturnError(value: Boolean) {
+        shouldReturnError = value
+    }
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        reminders?.let {return Result.Success(ArrayList(it))}
+        if (shouldReturnError) {
+            return Result.Error("Error getting reminders")
+        }
+        reminders?.let { return Result.Success(ArrayList(it)) }
         throw Exception("Reminders not found")
     }
 
