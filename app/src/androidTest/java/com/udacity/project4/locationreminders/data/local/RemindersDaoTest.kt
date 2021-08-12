@@ -13,8 +13,7 @@ import org.junit.runner.RunWith;
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi;
 import kotlinx.coroutines.test.runBlockingTest
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Test
@@ -77,6 +76,17 @@ class RemindersDaoTest {
         runBlockingTest {
             database.reminderDao().deleteAllReminders()
             assertThat(database.reminderDao().getReminders().size, `is`(0))
+        }
+    }
+
+    @Test
+    fun shouldReturnErrorWhenReminderWasNotFoundById() {
+        val reminder = ReminderDTO("AnyTitle", "AnyDescription", "anyLocation", 1.12, 0.12)
+        val invalidId = "AnyInvalidId"
+
+        runBlockingTest {
+            database.reminderDao().saveReminder(reminder)
+            assertThat(database.reminderDao().getReminderById(invalidId), `is`(nullValue()))
         }
     }
 }

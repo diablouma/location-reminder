@@ -15,6 +15,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.*
 import org.junit.runner.RunWith
+import java.lang.Error
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -70,5 +71,15 @@ class RemindersLocalRepositoryTest {
         assertThat((remindersLocalRepository.getReminders() as Result.Success).data.size, `is`(1))
         remindersLocalRepository.deleteAllReminders()
         assertThat((remindersLocalRepository.getReminders() as Result.Success).data.size, `is`(0))
+    }
+
+    @Test
+    fun shouldReturnErrorWhenReminderWasNotFound() = runBlocking {
+        val reminder = ReminderDTO("anyTitle", "anyDescription", "anyLocation", 1.01, 1.23)
+        remindersLocalRepository.saveReminder(reminder)
+
+        val result = remindersLocalRepository.getReminder("anyInvalidId")
+
+        assertThat((result as Result.Error).message, `is`("Reminder not found!"))
     }
 }
