@@ -1,16 +1,21 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.udacity.project4.R
+import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import getOrAwaitValue
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.nullValue
@@ -36,6 +41,8 @@ class SaveReminderViewModelTest {
 
     private lateinit var remindersRepository: FakeDataSource
 
+    private val context : Application = ApplicationProvider.getApplicationContext()
+
     @Before
     fun setupSaveReminderViewModel() {
         stopKoin()
@@ -52,7 +59,7 @@ class SaveReminderViewModelTest {
         }
 
         saveReminderViewModel =
-            SaveReminderViewModel(ApplicationProvider.getApplicationContext(), remindersRepository)
+            SaveReminderViewModel(context, remindersRepository)
     }
 
     @Test
@@ -64,5 +71,62 @@ class SaveReminderViewModelTest {
         assertThat(saveReminderViewModel.selectedPOI.getOrAwaitValue(), `is`(nullValue()))
         assertThat(saveReminderViewModel.latitude.getOrAwaitValue(), `is`(nullValue()))
         assertThat(saveReminderViewModel.longitude.getOrAwaitValue(), `is`(nullValue()))
+    }
+
+    @Test
+    fun shouldAssignTheSnackBarMessageWhenTitleIsEmpty() {
+        val reminderData = ReminderDataItem(null, "description", "location", 1.23, -1.23)
+        val validationResult = saveReminderViewModel.validateEnteredData(reminderData)
+
+        assertThat(saveReminderViewModel.showSnackBarInt.getOrAwaitValue(), `is`(R.string.err_enter_title))
+        assertThat(validationResult, `is`(false))
+    }
+
+    @Test
+    fun shouldAssignTheSnackBarMessageWhenLocationIsEmpty() {
+        val reminderData = ReminderDataItem("title", "description", null, 1.23, -1.23)
+        val validationResult = saveReminderViewModel.validateEnteredData(reminderData)
+
+        assertThat(saveReminderViewModel.showSnackBarInt.getOrAwaitValue(), `is`(R.string.err_select_location))
+        assertThat(validationResult, `is`(false))
+    }
+
+    @Test
+    fun shouldReturnTrueWhenTheReminderDataIsComplete() {
+        val reminderData = ReminderDataItem("title", "description", "location", 1.23, -1.23)
+        val validationResult = saveReminderViewModel.validateEnteredData(reminderData)
+
+        assertThat(validationResult, `is`(true))
+    }
+
+    @Test
+    fun shouldChangeLoadingStatusWhileSavingTheReminder() {
+        val reminderData = ReminderDataItem("title", "description", "location", 1.23, -1.23)
+
+        mainCoroutineRule.pauseDispatcher()
+        saveReminderViewModel.saveReminder(reminderData)
+        assertThat(saveReminderViewModel.showLoading.getOrAwaitValue(), CoreMatchers.`is`(true))
+
+        mainCoroutineRule.resumeDispatcher()
+
+        assertThat(saveReminderViewModel.showLoading.getOrAwaitValue(), CoreMatchers.`is`(false))
+    }
+
+    @Test
+    fun shouldAssignAValueToTheToast() {
+        val reminderData = ReminderDataItem("title", "description", "location", 1.23, -1.23)
+
+        saveReminderViewModel.saveReminder(reminderData)
+
+        assertThat(saveReminderViewModel.showToast.getOrAwaitValue(), `is`(context.getString(R.string.reminder_saved)))
+    }
+
+    @Test
+    fun shouldAssignAssignBackAsCommandWhenSavingWasSuccessful() {
+        val reminderData = ReminderDataItem("title", "description", "location", 1.23, -1.23)
+
+        saveReminderViewModel.saveReminder(reminderData)
+
+        assertThat(saveReminderViewModel.navigationCommand.getOrAwaitValue().toString(), `is`(NavigationCommand.Back.toString()))
     }
 }
