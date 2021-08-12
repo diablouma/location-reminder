@@ -25,6 +25,58 @@ import org.junit.Test
 @SmallTest
 class RemindersDaoTest {
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    private lateinit var database: RemindersDatabase
 
+    @Before
+    fun initDb() {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).build()
+    }
+
+    @After
+    fun closeDb() = run {
+        runBlockingTest { database.reminderDao().deleteAllReminders() }
+        database.close()
+    }
+
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+
+    @Test
+    fun shouldInsertDataInTheDatabase() {
+        val reminder = ReminderDTO("AnyTitle", "AnyDescription", "anyLocation", 1.12, 0.12)
+
+        runBlockingTest {
+            database.reminderDao().saveReminder(reminder)
+            assertThat(database.reminderDao().getReminderById(reminder.id)?.id, `is`(reminder.id))
+        }
+    }
+
+    @Test
+    fun shouldRetrieveAllReminders() {
+        val reminder = ReminderDTO("AnyTitle", "AnyDescription", "anyLocation", 1.12, 0.12)
+        val reminder2 = ReminderDTO("AnyTitle2", "AnyDescription2", "anyLocation2", 1.12, 0.12)
+        runBlockingTest {
+            database.reminderDao().saveReminder(reminder)
+            database.reminderDao().saveReminder(reminder2)
+            assertThat(database.reminderDao().getReminders().size, `is`(2))
+        }
+    }
+
+    @Test
+    fun shouldDeleteReminders() {
+        val reminder = ReminderDTO("AnyTitle", "AnyDescription", "anyLocation", 1.12, 0.12)
+        val reminder2 = ReminderDTO("AnyTitle2", "AnyDescription2", "anyLocation2", 1.12, 0.12)
+        runBlockingTest {
+            database.reminderDao().saveReminder(reminder)
+            database.reminderDao().saveReminder(reminder2)
+        }
+
+        runBlockingTest {
+            database.reminderDao().deleteAllReminders()
+            assertThat(database.reminderDao().getReminders().size, `is`(0))
+        }
+    }
 }
