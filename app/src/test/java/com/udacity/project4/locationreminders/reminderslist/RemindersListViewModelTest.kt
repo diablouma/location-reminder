@@ -53,8 +53,6 @@ class RemindersListViewModelTest {
             RemindersListViewModel(ApplicationProvider.getApplicationContext(), remindersRepository)
     }
 
-    //TODO: provide testing to the RemindersListViewModel and its live data objects
-
     @Test
     fun shouldSetRemindersInTheLiveDataWhenTheRepoHasReminders() {
         remindersListViewModel.loadReminders()
