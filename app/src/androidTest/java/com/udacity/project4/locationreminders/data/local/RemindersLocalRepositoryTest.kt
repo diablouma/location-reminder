@@ -5,11 +5,15 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
+import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.*
 import org.junit.runner.RunWith
 
 @ExperimentalCoroutinesApi
@@ -44,4 +48,27 @@ class RemindersLocalRepositoryTest {
         database.close()
     }
 
+    @Test
+    fun shouldGetRemindersFromTheLocalDB() = runBlocking{
+        val reminder = ReminderDTO("anyTitle", "anyDescription", "anyLocation", 1.01, 1.23)
+        remindersLocalRepository.saveReminder(reminder)
+
+        val result = remindersLocalRepository.getReminder(reminder.id)
+
+        result as Result.Success
+        assertThat(result.data.title, CoreMatchers.`is`("anyTitle"))
+        assertThat(result.data.description, CoreMatchers.`is`("anyDescription"))
+        assertThat(result.data.location, CoreMatchers.`is`("anyLocation"))
+        assertThat(result.data.latitude, CoreMatchers.`is`(1.01))
+        assertThat(result.data.longitude, CoreMatchers.`is`(1.23))
+    }
+
+    @Test
+    fun shouldDeleteAllRemindersFromDB() = runBlocking {
+        val reminder = ReminderDTO("anyTitle", "anyDescription", "anyLocation", 1.01, 1.23)
+        remindersLocalRepository.saveReminder(reminder)
+        assertThat((remindersLocalRepository.getReminders() as Result.Success).data.size, `is`(1))
+        remindersLocalRepository.deleteAllReminders()
+        assertThat((remindersLocalRepository.getReminders() as Result.Success).data.size, `is`(0))
+    }
 }
