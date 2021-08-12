@@ -184,7 +184,6 @@ class RemindersActivity : AppCompatActivity() {
         locationSettingsResponseTask.addOnCompleteListener {
             if ( it.isSuccessful ) {
                 Log.i("RemindersActivity", "Locations settings ready!!!")
-                // TODO: here I might need to get all the
             }
         }
     }
