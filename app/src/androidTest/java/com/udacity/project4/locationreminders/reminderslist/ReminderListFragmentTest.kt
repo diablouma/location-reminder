@@ -26,6 +26,7 @@ import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.util.monitorFragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.CoreMatchers.hasItem
 import org.junit.After
 import org.junit.Assert.*
@@ -78,30 +79,33 @@ class ReminderListFragmentTest : KoinTest {
 
     //    TODO: test the displayed data on the UI.
     @Test
-    fun shouldShowTheLocationReminderInTheList() = runBlocking {
-        repository.saveReminder(
-            ReminderDTO(
-                "TestingTitle",
-                "TestingDescription",
-                "TestingLocation",
-                1.12,
-                1.23
+    fun shouldShowTheLocationReminderInTheList() {
+        runBlocking {
+            repository.saveReminder(
+                ReminderDTO(
+                    "TestingTitle",
+                    "TestingDescription",
+                    "TestingLocation",
+                    1.12,
+                    1.23
+                )
             )
-        )
 
-        val fragmentScenario = launchFragmentInContainer(themeResId = R.style.AppTheme) {
-            ReminderListFragment().also { fragment ->
-                fragment.viewLifecycleOwnerLiveData.observeForever { viewLifecycleOwner ->
-                    if (viewLifecycleOwner != null) {
-                        Navigation.setViewNavController(fragment.requireView(), navController)
+            val fragmentScenario = launchFragmentInContainer(themeResId = R.style.AppTheme) {
+                ReminderListFragment().also { fragment ->
+                    fragment.viewLifecycleOwnerLiveData.observeForever { viewLifecycleOwner ->
+                        if (viewLifecycleOwner != null) {
+                            Navigation.setViewNavController(fragment.requireView(), navController)
+                        }
                     }
                 }
             }
+
+            dataBindingIdlingResource.monitorFragment(fragmentScenario)
+
+            onView(withText("TestingTitle")).check(matches(isDisplayed()))
+            onView(withText("TestingDescription")).check(matches(isDisplayed()))
+            onView(withText("TestingLocation")).check(matches(isDisplayed()))
         }
-
-        dataBindingIdlingResource.monitorFragment(fragmentScenario)
-
-        onView(withText("TestingTitle")).check(matches(isDisplayed()))
     }
-    //    TODO: add testing for the error messages.
 }
