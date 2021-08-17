@@ -51,16 +51,17 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
 
         if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
             Log.v(this.javaClass.name, this.getString(R.string.geofence_entered))
-            val fenceId = when {
+            when {
                 geofencingEvent.triggeringGeofences.isNotEmpty() ->
-                    geofencingEvent.triggeringGeofences[0].requestId
+                    geofencingEvent.triggeringGeofences.forEach {
+                        sendNotification(it.requestId)
+                        Log.i(this.javaClass.name, "Entered into geofence:" + it.requestId)
+                    }
                 else -> {
                     Log.e(this.javaClass.name, "No Geofence Trigger Found!")
                     return
                 }
             }
-            sendNotification(fenceId)
-            Log.i(this.javaClass.name, "Entered into geofence:" + fenceId)
         }
 
     }
