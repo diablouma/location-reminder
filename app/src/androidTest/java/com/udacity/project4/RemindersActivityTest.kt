@@ -1,5 +1,6 @@
 package com.udacity.project4
 
+import android.app.Activity
 import android.app.Application
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
@@ -7,9 +8,11 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -20,6 +23,8 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.not
+import org.hamcrest.core.Is.`is`
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -39,6 +44,7 @@ class RemindersActivityTest :
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
+    private lateinit var auth: FirebaseAuth
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -82,6 +88,7 @@ class RemindersActivityTest :
     @Before
     fun registerIdlingResource() {
         IdlingRegistry.getInstance().register(dataBindingIdlingResource)
+
     }
 
     @After
@@ -111,5 +118,62 @@ class RemindersActivityTest :
         onView(withId(R.id.saveReminder)).perform(click())
         onView(withText("A Testing Title")).check(matches(isDisplayed()))
         activityScenario.close()
+    }
+
+    @Test
+    fun shouldShowSnackbarWhenThereWasAnErrorLoadingTheReminders() {
+        TODO("Not yet implemented") //RemindersListViewModel
+    }
+
+    @Test
+    fun shouldShowToastMessageWhenReminderWasSavedSuccessfully() {
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderTitle)).perform(typeText("A Testing Title"))
+        onView(withId(R.id.reminderDescription)).perform(typeText("A Testing Description"), closeSoftKeyboard())
+
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        val activity = getActivity(activityScenario)
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+            .check(
+                matches(
+                    isDisplayed()
+                )
+            )
+
+        activityScenario.close()
+    }
+
+    @Test
+    fun shouldShowSnackbarWithValidationErrorWhenTitleIsNotCorrect() {
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderTitle)).perform(typeText(""))
+        onView(withId(R.id.reminderDescription)).perform(typeText("A Testing Description"), closeSoftKeyboard())
+
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText(R.string.err_enter_title)))
+
+        activityScenario.close()
+    }
+
+    @Test
+    fun shouldShowSnackbarWithValidationErrorWhenLocationIsNotCorrect() {
+        //TODO: how to emulate that the location has not been selected
+    }
+
+    private fun getActivity(activityScenario: ActivityScenario<RemindersActivity>): Activity? {
+        var activity: Activity? = null
+        activityScenario.onActivity {
+            activity = it
+        }
+        return activity
     }
 }
