@@ -164,11 +164,6 @@ class RemindersActivityTest :
         activityScenario.close()
     }
 
-    @Test
-    fun shouldShowSnackbarWithValidationErrorWhenLocationIsNotCorrect() {
-        //TODO: how to emulate that the location has not been selected
-    }
-
     private fun getActivity(activityScenario: ActivityScenario<RemindersActivity>): Activity? {
         var activity: Activity? = null
         activityScenario.onActivity {
