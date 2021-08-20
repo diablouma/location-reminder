@@ -37,13 +37,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
-    private val REQUEST_LOCATION_PERMISSION = 1
-    private var locationPermissionGranted = false
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private var lastKnownLocation: Location? = null
-    private val defaultLocation = LatLng(-33.8523341, 151.2106085)
-    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
-            android.os.Build.VERSION_CODES.Q
 
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: LocationListener
@@ -61,7 +56,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         binding.lifecycleOwner = this
 
         setHasOptionsMenu(true)
-//        setDisplayHomeAsUpEnabled(true)
 
 //        TODO: add the map setup implementation
 //        TODO: zoom to the user location after taking his permission
@@ -134,8 +128,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         locationListener = object : LocationListener {
             @SuppressLint("MissingPermission")
             override fun onLocationChanged(location: Location) {
-                map.clear()
                 map.setMyLocationEnabled(true)
+
                 val userLocation = LatLng(location.latitude, location.longitude)
                 map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
                 map.moveCamera(
@@ -161,6 +155,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
+            map.setMyLocationEnabled(true)
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 0,
@@ -168,12 +163,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 locationListener
             )
 
-            val lastKnownLocation =
+            lastKnownLocation =
                 locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
             if (lastKnownLocation != null) {
                 val userLocation =
                     LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-                map.clear()
                 map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
             }
 
@@ -181,7 +175,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             ActivityCompat.requestPermissions(
                 requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                BACKGROUND_LOCATION_PERMISSION_INDEX
+                REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
             )
         }
     }
@@ -243,71 +237,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (markerCount > 0 && marker != null) marker.remove()
     }
 
-    @SuppressLint("MissingPermission") // we are checking this with the isPermissionGranted and onREquestPermissionResult methods
-    private fun enableMyLocation() {
-        if (isPermissionGranted()) {
-            Log.i("SelectLocationFragment", "Premission Granted for getting users location")
-            map.setMyLocationEnabled(true)
-            locationPermissionGranted = true
-            getDeviceLocation()
-        } else {
-            ActivityCompat.requestPermissions(
-                this.requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
-            )
-        }
-    }
-
-    private fun getDeviceLocation() {
-        /*
-         * Get the best and most recent location of the device, which may be null in rare
-         * cases when a location is not available.
-         */
-        try {
-            Log.i(
-                "SelectLocatioNFRagment",
-                "locationPermissionGranted:" + locationPermissionGranted
-            )
-            if (locationPermissionGranted) {
-                val locationResult = fusedLocationProviderClient.lastLocation
-                locationResult.addOnCompleteListener(requireActivity()) { task ->
-                    if (task.isSuccessful) {
-                        // Set the map's camera position to the current location of the device.
-                        lastKnownLocation = task.result
-                        if (lastKnownLocation != null) {
-                            map?.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(
-                                    LatLng(
-                                        lastKnownLocation!!.latitude,
-                                        lastKnownLocation!!.longitude
-                                    ), DEFAULT_ZOOM.toFloat()
-                                )
-                            )
-                        }
-                    } else {
-                        Log.d(TAG, "Current location is null. Using defaults.")
-                        Log.e(TAG, "Exception: %s", task.exception)
-                        map?.moveCamera(
-                            CameraUpdateFactory
-                                .newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat())
-                        )
-                        map?.uiSettings?.isMyLocationButtonEnabled = false
-                    }
-                }
-            }
-        } catch (e: SecurityException) {
-            Log.e("SelectLocation error %s", e.message, e)
-        }
-    }
-
-    private fun isPermissionGranted(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this.requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) === PackageManager.PERMISSION_GRANTED
-    }
-
     // result from requesting permissions
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -322,6 +251,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
+                map.setMyLocationEnabled(true)
                 locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
                     0,
@@ -340,7 +270,3 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 }
 
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
-private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
-private const val LOCATION_PERMISSION_INDEX = 0
-private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
-private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
