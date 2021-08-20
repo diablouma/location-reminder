@@ -54,7 +54,7 @@ class RemindersActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        checkPermissionsAndStartGeofencing()
+//        checkPermissionsAndStartGeofencing()
     }
 
     private fun checkPermissionsAndStartGeofencing() {
