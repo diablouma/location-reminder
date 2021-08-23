@@ -12,7 +12,6 @@ import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -37,9 +36,8 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.get
-import org.mockito.Mockito
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -58,35 +56,7 @@ class RemindersActivityTest :
      */
     @Before
     fun init() {
-        stopKoin()//stop the original app koin
-        appContext = getApplicationContext()
-        val myModule = module {
-            viewModel {
-                RemindersListViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single {
-                SaveReminderViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single { RemindersLocalRepository(get()) as ReminderDataSource }
-            single { LocalDB.createRemindersDao(appContext) }
-        }
-        //declare a new koin module
-        startKoin {
-            modules(listOf(myModule))
-        }
-        //Get our real repository
-        repository = get()
-
-        //clear the data to start fresh
-        runBlocking {
-            repository.deleteAllReminders()
-        }
+        initKoinDependencies()
     }
 
     @Before
@@ -131,40 +101,7 @@ class RemindersActivityTest :
 
     @Test
     fun shouldShowSnackbarWhenThereWasAnErrorLoadingTheReminders() = runBlocking {
-        stopKoin()//stop the original app koin
-        appContext = getApplicationContext()
-        runBlocking {
-            `when`(mockedDatasource.getReminders()).thenReturn(Result.Error("Reminders not found"))
-        }
-
-        val myModule = module {
-            viewModel {
-                RemindersListViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single {
-                SaveReminderViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single { mockedDatasource as ReminderDataSource }
-            single { LocalDB.createRemindersDao(appContext) }
-        }
-        //declare a new koin module
-        startKoin {
-            modules(listOf(myModule))
-        }
-
-        repository = get()
-
-        //clear the data to start fresh
-        runBlocking {
-            repository.deleteAllReminders()
-        }
-
+        initKoinDependencies(true)
 
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(activityScenario)
@@ -226,5 +163,48 @@ class RemindersActivityTest :
             activity = it
         }
         return activity
+    }
+
+    private fun initKoinDependencies(withMockedDataSource: Boolean = false) {
+        stopKoin()//stop the original app koin
+        appContext = getApplicationContext()
+
+        if (withMockedDataSource) {
+            runBlocking {
+                `when`(mockedDatasource.getReminders()).thenReturn(Result.Error("Reminders not found"))
+            }
+        }
+
+        val myModule = module {
+            viewModel {
+                RemindersListViewModel(
+                    appContext,
+                    get() as ReminderDataSource
+                )
+            }
+            single {
+                SaveReminderViewModel(
+                    appContext,
+                    get() as ReminderDataSource
+                )
+            }
+            if (withMockedDataSource) {
+                single { mockedDatasource as ReminderDataSource }
+            } else {
+                single { RemindersLocalRepository(get()) as ReminderDataSource }
+            }
+            single { LocalDB.createRemindersDao(appContext) }
+        }
+        //declare a new koin module
+        startKoin {
+            modules(listOf(myModule))
+        }
+        //Get our real repository
+        repository = get()
+
+        //clear the data to start fresh
+        runBlocking {
+            repository.deleteAllReminders()
+        }
     }
 }
