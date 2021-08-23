@@ -22,6 +22,7 @@ import com.udacity.project4.locationreminders.reminderslist.RemindersListViewMod
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
+import com.udacity.project4.utils.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.core.Is.`is`
@@ -44,7 +45,7 @@ class RemindersActivityTest :
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
-    private lateinit var auth: FirebaseAuth
+    private val dataBindingIdlingResource = DataBindingIdlingResource()
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -83,17 +84,17 @@ class RemindersActivityTest :
         }
     }
 
-    private val dataBindingIdlingResource = DataBindingIdlingResource()
-
     @Before
     fun registerIdlingResource() {
         IdlingRegistry.getInstance().register(dataBindingIdlingResource)
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
 
     }
 
     @After
     fun unregisterIdlingResource() {
         IdlingRegistry.getInstance().unregister(dataBindingIdlingResource)
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
     }
 
     @Test
@@ -113,7 +114,10 @@ class RemindersActivityTest :
 
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.reminderTitle)).perform(typeText("A Testing Title"))
-        onView(withId(R.id.reminderDescription)).perform(typeText("A Testing Description"), closeSoftKeyboard())
+        onView(withId(R.id.reminderDescription)).perform(
+            typeText("A Testing Description"),
+            closeSoftKeyboard()
+        )
 
         onView(withId(R.id.saveReminder)).perform(click())
         onView(withText("A Testing Title")).check(matches(isDisplayed()))
@@ -132,7 +136,10 @@ class RemindersActivityTest :
 
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.reminderTitle)).perform(typeText("A Testing Title"))
-        onView(withId(R.id.reminderDescription)).perform(typeText("A Testing Description"), closeSoftKeyboard())
+        onView(withId(R.id.reminderDescription)).perform(
+            typeText("A Testing Description"),
+            closeSoftKeyboard()
+        )
 
         onView(withId(R.id.saveReminder)).perform(click())
 
@@ -154,7 +161,10 @@ class RemindersActivityTest :
 
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.reminderTitle)).perform(typeText(""))
-        onView(withId(R.id.reminderDescription)).perform(typeText("A Testing Description"), closeSoftKeyboard())
+        onView(withId(R.id.reminderDescription)).perform(
+            typeText("A Testing Description"),
+            closeSoftKeyboard()
+        )
 
         onView(withId(R.id.saveReminder)).perform(click())
 
