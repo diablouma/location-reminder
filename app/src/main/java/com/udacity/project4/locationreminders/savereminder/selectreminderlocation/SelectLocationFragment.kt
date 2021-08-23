@@ -123,6 +123,35 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
+        locationManager =
+            requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        locationListener = object : LocationListener {
+            @SuppressLint("MissingPermission")
+            override fun onLocationChanged(location: Location) {
+                Log.i(this.javaClass.simpleName, "Location has changed:" + location.latitude + "," + location.longitude)
+                map.setMyLocationEnabled(true)
+
+                val userLocation = LatLng(location.latitude, location.longitude)
+                map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            location.latitude,
+                            location.longitude
+                        ), DEFAULT_ZOOM.toFloat()
+                    )
+                )
+            }
+
+            override fun onStatusChanged(provider: String, status: Int, extras: Bundle?) {}
+
+            override fun onProviderEnabled(provider: String) {}
+
+            override fun onProviderDisabled(provider: String) {
+            }
+        }
+
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -156,39 +185,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapLongClick(map)
         setPoiClick(map)
 
-        locationManager =
-            requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
         if (locationEnabled) {
             map.setMyLocationEnabled(true)
         }
-
-        locationListener = object : LocationListener {
-            @SuppressLint("MissingPermission")
-            override fun onLocationChanged(location: Location) {
-                Log.i(this.javaClass.simpleName, "Location has changed:" + location.latitude + "," + location.longitude)
-                map.setMyLocationEnabled(true)
-
-                val userLocation = LatLng(location.latitude, location.longitude)
-                map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
-                map.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            location.latitude,
-                            location.longitude
-                        ), DEFAULT_ZOOM.toFloat()
-                    )
-                )
-            }
-
-            override fun onStatusChanged(provider: String, status: Int, extras: Bundle?) {}
-
-            override fun onProviderEnabled(provider: String) {}
-
-            override fun onProviderDisabled(provider: String) {
-            }
-        }
-
-
     }
 
     private fun setMapStyle(map: GoogleMap) {
