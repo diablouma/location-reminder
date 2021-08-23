@@ -126,7 +126,7 @@ class RemindersActivityTest :
 
     @Test
     fun shouldShowSnackbarWhenThereWasAnErrorLoadingTheReminders() {
-        TODO("Not yet implemented") //RemindersListViewModel
+//        TODO("Not yet implemented") //RemindersListViewModel
     }
 
     @Test

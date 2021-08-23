@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -96,10 +97,12 @@ class SaveReminderFragment : BaseFragment() {
 
         geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
             addOnSuccessListener {
-                Toast.makeText(
-                    requireContext(), R.string.geofences_added,
-                    Toast.LENGTH_SHORT
-                ).show()
+                checkIfFragmentAttached {
+                    Toast.makeText(
+                        requireContext(), R.string.geofences_added,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
                 Log.i("Added Geofence", geofence.requestId)
             }
@@ -112,6 +115,12 @@ class SaveReminderFragment : BaseFragment() {
                     Log.w("SaveReminderFragment", it.message.toString())
                 }
             }
+        }
+    }
+
+    fun checkIfFragmentAttached(operation: Context.() -> Unit) {
+        if (isAdded && context != null) {
+            operation(requireContext())
         }
     }
 
