@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
@@ -36,6 +37,9 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.get
+import org.mockito.Mockito
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -46,6 +50,7 @@ class RemindersActivityTest :
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
     private val dataBindingIdlingResource = DataBindingIdlingResource()
+    private val mockedDatasource = mock(ReminderDataSource::class.java)
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -125,8 +130,49 @@ class RemindersActivityTest :
     }
 
     @Test
-    fun shouldShowSnackbarWhenThereWasAnErrorLoadingTheReminders() {
-//        TODO("Not yet implemented") //RemindersListViewModel
+    fun shouldShowSnackbarWhenThereWasAnErrorLoadingTheReminders() = runBlocking {
+        stopKoin()//stop the original app koin
+        appContext = getApplicationContext()
+        runBlocking {
+            `when`(mockedDatasource.getReminders()).thenReturn(Result.Error("Reminders not found"))
+        }
+
+        val myModule = module {
+            viewModel {
+                RemindersListViewModel(
+                    appContext,
+                    get() as ReminderDataSource
+                )
+            }
+            single {
+                SaveReminderViewModel(
+                    appContext,
+                    get() as ReminderDataSource
+                )
+            }
+            single { mockedDatasource as ReminderDataSource }
+            single { LocalDB.createRemindersDao(appContext) }
+        }
+        //declare a new koin module
+        startKoin {
+            modules(listOf(myModule))
+        }
+
+        repository = get()
+
+        //clear the data to start fresh
+        runBlocking {
+            repository.deleteAllReminders()
+        }
+
+
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText("Reminders not found")))
+
+        activityScenario.close()
     }
 
     @Test
