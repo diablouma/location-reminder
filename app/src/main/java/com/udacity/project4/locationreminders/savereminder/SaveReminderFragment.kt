@@ -285,6 +285,16 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    // Replace the code below in the onActivityResult() method. After the user
+    // chooses whether to accept or deny device location permissions, this checks
+    // if the user has chosen to accept the permissions. If not, it will ask again.
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
+            checkDeviceLocationSettingsAndStartGeofence(false)
+        }
+    }
+
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
             "SaveReminderFragment.saveReminder.action.ACTION_REMINDER_SAVED"
