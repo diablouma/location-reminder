@@ -259,8 +259,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
-            zoomOnLocation()
+        when (requestCode) {
+            REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE -> {
+                // act accordingly
+                Log.i(this.javaClass.simpleName, "after requesting foregroung permissions")
+                zoomOnLocation()
+            }
+            REQUEST_TURN_DEVICE_LOCATION_ON -> {
+                zoomOnLocation()
+            }
         }
     }
 
@@ -287,10 +294,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 Snackbar.LENGTH_INDEFINITE
             )
                 .setAction(R.string.settings) {
-                    startActivity(Intent().apply {
+                    startActivityForResult(Intent().apply {
                         action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                         data = Uri.fromParts("package", requireContext().packageName, null)
-                    })
+                    }, REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE)
                 }.show()
         }
     }
